@@ -5,6 +5,13 @@ services:
   mongo:
     image: mongo:4.2.16
     restart: always
+    healthcheck:
+      test: "[ -f /data/health.check ] && exit 0 || exit 1"
+      interval: 1s
+      timeout: 30s
+      retries: 300
+    volumes:
+      - ./mongodb:/app
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -20,11 +27,18 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
 
   elastic-search:
-    image: elasticsearch:7.14.1
+    build:
+      context: ./elastic-search
+      dockerfile: ./Dockerfile
     restart: always
     ports:
       - "9200:9200"
     environment:
       - discovery.type=single-node
+    healthcheck:
+      test: "wget -q -O - http://localhost:9200/_cat/health"
+      interval: 1s
+      timeout: 30s
+      retries: 300
     # volumes:
     #   - ./elasticsearch/elasticsearch.config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
