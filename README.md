@@ -1,4 +1,4 @@
-# mongodb-elasticsearch
+# mongodb-elasticsearch-playground
 
 ## Usage
 
