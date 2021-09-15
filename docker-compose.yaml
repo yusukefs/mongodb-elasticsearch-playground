@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
 
-  mongo:
+  mongo-0:
     image: mongo:4.2.16
     restart: always
     healthcheck:
@@ -10,11 +10,10 @@ services:
       interval: 1s
       timeout: 30s
       retries: 300
+    command: mongod --replSet rs0
     volumes:
       - ./mongodb:/app
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - ./mongodb/init:/docker-entrypoint-initdb.d:ro
 
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
@@ -22,9 +21,7 @@ services:
     ports:
       - 8081:8081
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://mongo-0:27017/
 
   elastic-search:
     build:
@@ -42,3 +39,22 @@ services:
       retries: 300
     # volumes:
     #   - ./elasticsearch/elasticsearch.config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+  monstache:
+    image: rwynn/monstache:6.7.5
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./monstache:/app
+    command: '-f /app/config.toml'
+    depends_on:
+      mongo:
+        condition: service_started
+      elastic-search:
+        condition: service_healthy
+    healthcheck:
+      test: "wget -q -O - http://localhost:8080/healthz"
+      interval: 1s
+      timeout: 30s
+      retries: 300

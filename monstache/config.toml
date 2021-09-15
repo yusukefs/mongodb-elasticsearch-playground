@@ -1,0 +1,3 @@
+mongo-url = "mongodb://mongo-0:27017/"
+elasticsearch-urls = ["http://elastic-search:9200"]
+verbose = true
